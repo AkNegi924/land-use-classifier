@@ -25,6 +25,9 @@
         --shadow-hover: 0 10px 20px rgba(0, 0, 0, 0.15);
         --transition-duration: 0.3s;
         --border-radius: 10px;
+        --success-color: #27ae60;
+        --error-color: #e74c3c;
+        --warning-color: #f39c12;
       }
 
       * {
@@ -168,8 +171,16 @@
         margin-top: 40px;
         text-align: center;
         display: flex;
+        flex-direction: column;
         justify-content: center;
         align-items: center;
+      }
+
+      .model-selector-row {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-bottom: 15px;
       }
 
       .model-selector label {
@@ -213,8 +224,87 @@
         box-shadow: 0 0 15px rgba(52, 152, 219, 0.2);
       }
 
+      .model-selector button {
+        padding: 10px 24px;
+        font-size: 16px;
+        font-weight: 600;
+        color: var(--white);
+        background: linear-gradient(
+          45deg,
+          var(--primary-color),
+          var(--secondary-color)
+        );
+        border: none;
+        border-radius: var(--border-radius);
+        cursor: pointer;
+        margin-left: 15px;
+        box-shadow: var(--shadow-subtle);
+        letter-spacing: 1px;
+        transition: transform var(--transition-duration) ease,
+          box-shadow var(--transition-duration) ease,
+          background-image var(--transition-duration) ease;
+      }
+
+      .model-selector button:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-hover);
+        background: linear-gradient(
+          225deg,
+          var(--primary-color),
+          var(--secondary-color)
+        );
+      }
+
+      .model-selector button:disabled {
+        background: #cccccc;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+      }
+
+      .download-status {
+        background: rgba(241, 245, 249, 0.7);
+        padding: 15px;
+        border-radius: 12px;
+        border-left: 5px solid var(--primary-color);
+        margin-top: 15px;
+        font-weight: 500;
+        text-align: left;
+        width: 100%;
+        max-width: 500px;
+        display: none;
+      }
+
+      .download-status.show {
+        display: block;
+      }
+
+      .progress-container {
+        width: 100%;
+        height: 15px;
+        background-color: #e0e0e0;
+        border-radius: 10px;
+        margin-top: 10px;
+        overflow: hidden;
+      }
+
+      .progress-bar {
+        height: 100%;
+        background: linear-gradient(
+          45deg,
+          var(--primary-color),
+          var(--secondary-color)
+        );
+        border-radius: 10px;
+        transition: width 0.3s ease;
+      }
+
+      .status-icon {
+        margin-right: 10px;
+      }
+
       .file-upload {
-        margin-top: 50px;
+        margin-top: 30px;
         text-align: center;
         background: rgba(241, 245, 249, 0.5);
         padding: 30px;
@@ -292,11 +382,18 @@
         );
       }
 
+      .file-upload button:disabled {
+        background: #cccccc;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+      }
+
       #result {
         margin-top: 30px;
         font-size: 20px;
         font-weight: 600;
-        color: #27ae60;
+        color: var(--success-color);
         white-space: pre-line;
         background: rgba(241, 245, 249, 0.7);
         padding: 20px;
@@ -317,27 +414,22 @@
           padding: 30px;
         }
 
-        /* .logo-container {
-          flex-direction: column;
-          text-align: center;
-        }
-
-        .logo {
-          margin-right: 0;
-          margin-bottom: 15px;
-        } */
-
         .header-group {
           text-align: center;
         }
 
-        .model-selector {
+        .model-selector-row {
           flex-direction: column;
         }
 
         .model-selector label {
           margin-right: 0;
           margin-bottom: 10px;
+        }
+
+        .model-selector button {
+          margin-left: 0;
+          margin-top: 10px;
         }
 
         .file-upload input[type="file"] {
@@ -369,14 +461,29 @@
       </h1>
 
       <div class="model-selector">
-        <label for="model-choice"
-          ><i class="fas fa-brain"></i>Select Model:</label
-        >
-        <select id="model-choice" name="model_choice">
-          <option value="cnn_fe" selected>CNN-FE</option>
-          <option value="en_finetuned">EfficientNet Finetuned</option>
-          <option value="en_tl">EfficientNet TL</option>
-        </select>
+        <div class="model-selector-row">
+          <label for="model-choice"
+            ><i class="fas fa-brain"></i>Select Model:</label
+          >
+          <select id="model-choice" name="model_choice">
+            <option value="cnn_fe" selected>CNN-FE</option>
+            <option value="en_finetuned">EfficientNet Finetuned</option>
+            <option value="en_tl">EfficientNet TL</option>
+          </select>
+          <button id="load-model-btn" type="button">
+            <i class="fas fa-download"></i> Load Model
+          </button>
+        </div>
+
+        <div id="download-status" class="download-status">
+          <div id="status-text">
+            <i class="fas fa-spinner fa-spin status-icon"></i>
+            Initializing...
+          </div>
+          <div class="progress-container">
+            <div id="progress-bar" class="progress-bar" style="width: 0%"></div>
+          </div>
+        </div>
       </div>
 
       <div class="file-upload">
@@ -389,58 +496,228 @@
             accept="image/*"
             required
           />
-          <button type="submit">Predict <i class="fas fa-magic"></i></button>
+          <button id="predict-btn" type="submit" disabled>
+            Predict <i class="fas fa-magic"></i>
+          </button>
         </form>
         <div id="result"></div>
       </div>
     </div>
 
     <script>
-      document
-        .getElementById("upload-form")
-        .addEventListener("submit", async function (e) {
-          e.preventDefault();
-          const formData = new FormData();
+      // Global variables
+      let isModelLoaded = false;
+      let progressCheckInterval = null;
 
-          const modelSelect = document.getElementById("model-choice");
-          formData.append("model_choice", modelSelect.value);
+      // Elements
+      const modelSelect = document.getElementById("model-choice");
+      const loadModelBtn = document.getElementById("load-model-btn");
+      const downloadStatus = document.getElementById("download-status");
+      const statusText = document.getElementById("status-text");
+      const progressBar = document.getElementById("progress-bar");
+      const predictBtn = document.getElementById("predict-btn");
+      const uploadForm = document.getElementById("upload-form");
+      const resultElement = document.getElementById("result");
 
-          const fileInput = document.getElementById("image-input");
-          formData.append("image", fileInput.files[0]);
+      // Initialize the application
+      function initApp() {
+        loadModelBtn.addEventListener("click", handleModelLoad);
+        modelSelect.addEventListener("change", handleModelChange);
+        uploadForm.addEventListener("submit", handlePredict);
+      }
 
+      // Handle model selection change
+      function handleModelChange() {
+        isModelLoaded = false;
+        predictBtn.disabled = true;
+        resetProgressUI();
+      }
+
+      // Handle model loading
+      async function handleModelLoad() {
+        const modelChoice = modelSelect.value;
+
+        try {
+          // Disable UI during model load
+          loadModelBtn.disabled = true;
+          modelSelect.disabled = true;
+
+          // Show download status
+          downloadStatus.classList.add("show");
+          statusText.innerHTML = `<i class="fas fa-spinner fa-spin status-icon"></i>Initializing download for ${getModelName(
+            modelChoice
+          )}...`;
+          progressBar.style.width = "0%";
+
+          // Start the download
+          const response = await fetch("/download-model", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ model_choice: modelChoice }),
+          });
+
+          const data = await response.json();
+
+          if (data.status === "already_loaded") {
+            statusText.innerHTML = `<i class="fas fa-check-circle status-icon" style="color: var(--success-color)"></i>${getModelName(
+              modelChoice
+            )} is already loaded`;
+            progressBar.style.width = "100%";
+            isModelLoaded = true;
+            predictBtn.disabled = false;
+            loadModelBtn.disabled = false;
+            modelSelect.disabled = false;
+            return;
+          }
+
+          // Start polling for progress
+          startProgressCheck();
+        } catch (error) {
+          statusText.innerHTML = `<i class="fas fa-exclamation-triangle status-icon" style="color: var(--error-color)"></i>Error: ${error.message}`;
+          loadModelBtn.disabled = false;
+          modelSelect.disabled = false;
+        }
+      }
+
+      // Poll for download progress
+      function startProgressCheck() {
+        if (progressCheckInterval) {
+          clearInterval(progressCheckInterval);
+        }
+
+        // Set initial progress animation
+        let fakeProgress = 0;
+
+        progressCheckInterval = setInterval(async () => {
           try {
-            const response = await fetch("/predict", {
-              method: "POST",
-              body: formData,
-            });
-            const result = await response.json();
-            const resultElement = document.getElementById("result");
-            resultElement.innerHTML = ""; // Clear previous result
+            const response = await fetch("/download-progress");
+            const data = await response.json();
 
-            if (response.ok) {
-              resultElement.innerHTML =
-                `<i class="fas fa-check-circle" style="color: #27ae60; margin-right: 10px;"></i>` +
-                `Predicted Class: <strong>${result.predicted_class}</strong><br>` +
-                `Prediction Time: <strong>${result.prediction_time.toFixed(
-                  3
-                )} seconds</strong>`;
-              resultElement.classList.add("show");
-            } else {
-              resultElement.innerHTML =
-                `<i class="fas fa-exclamation-triangle" style="color: #e74c3c; margin-right: 10px;"></i>` +
-                "Error: " +
-                result.error;
-              resultElement.classList.add("show");
+            if (data.status === "downloading") {
+              // If we don't have real progress (since callback is removed), show an animation
+              if (data.progress === 0) {
+                // Simulate progress for UI feedback
+                fakeProgress = Math.min(fakeProgress + 1, 95); // Cap at 95% to avoid confusion
+                statusText.innerHTML = `<i class="fas fa-spinner fa-spin status-icon"></i>Downloading ${getModelName(
+                  data.model
+                )}...`;
+                progressBar.style.width = `${fakeProgress}%`;
+              } else {
+                // If we have real progress from the backend
+                statusText.innerHTML = `<i class="fas fa-spinner fa-spin status-icon"></i>Downloading ${getModelName(
+                  data.model
+                )}... ${data.progress}%`;
+                progressBar.style.width = `${data.progress}%`;
+              }
+            } else if (data.status === "complete") {
+              statusText.innerHTML = `<i class="fas fa-check-circle status-icon" style="color: var(--success-color)"></i>${getModelName(
+                data.model
+              )} loaded successfully`;
+              progressBar.style.width = "100%";
+              isModelLoaded = true;
+              predictBtn.disabled = false;
+              loadModelBtn.disabled = false;
+              modelSelect.disabled = false;
+              clearInterval(progressCheckInterval);
+            } else if (data.status === "error") {
+              statusText.innerHTML = `<i class="fas fa-exclamation-triangle status-icon" style="color: var(--error-color)"></i>Error: ${data.error}`;
+              loadModelBtn.disabled = false;
+              modelSelect.disabled = false;
+              clearInterval(progressCheckInterval);
             }
           } catch (error) {
-            const resultElement = document.getElementById("result");
+            statusText.innerHTML = `<i class="fas fa-exclamation-triangle status-icon" style="color: var(--error-color)"></i>Error checking progress: ${error.message}`;
+            loadModelBtn.disabled = false;
+            modelSelect.disabled = false;
+            clearInterval(progressCheckInterval);
+          }
+        }, 1000);
+      }
+
+      // Reset progress UI
+      function resetProgressUI() {
+        downloadStatus.classList.remove("show");
+        progressBar.style.width = "0%";
+        if (progressCheckInterval) {
+          clearInterval(progressCheckInterval);
+        }
+      }
+
+      // Handle prediction form submission
+      async function handlePredict(e) {
+        e.preventDefault();
+
+        if (!isModelLoaded) {
+          resultElement.innerHTML =
+            `<i class="fas fa-exclamation-triangle" style="color: var(--warning-color); margin-right: 10px;"></i>` +
+            "Please load a model first";
+          resultElement.classList.add("show");
+          return;
+        }
+
+        const formData = new FormData();
+        formData.append("model_choice", modelSelect.value);
+        formData.append(
+          "image",
+          document.getElementById("image-input").files[0]
+        );
+
+        // Disable UI during prediction
+        predictBtn.disabled = true;
+
+        try {
+          const response = await fetch("/predict", {
+            method: "POST",
+            body: formData,
+          });
+
+          const result = await response.json();
+          resultElement.innerHTML = ""; // Clear previous result
+
+          if (response.ok) {
             resultElement.innerHTML =
-              `<i class="fas fa-exclamation-triangle" style="color: #e74c3c; margin-right: 10px;"></i>` +
+              `<i class="fas fa-check-circle" style="color: var(--success-color); margin-right: 10px;"></i>` +
+              `Predicted Class: <strong>${result.predicted_class}</strong><br>` +
+              `Prediction Time: <strong>${result.prediction_time.toFixed(
+                3
+              )} seconds</strong>`;
+            resultElement.classList.add("show");
+          } else {
+            resultElement.innerHTML =
+              `<i class="fas fa-exclamation-triangle" style="color: var(--error-color); margin-right: 10px;"></i>` +
               "Error: " +
-              error;
+              result.error;
             resultElement.classList.add("show");
           }
-        });
+        } catch (error) {
+          resultElement.innerHTML =
+            `<i class="fas fa-exclamation-triangle" style="color: var(--error-color); margin-right: 10px;"></i>` +
+            "Error: " +
+            error;
+          resultElement.classList.add("show");
+        } finally {
+          predictBtn.disabled = false;
+        }
+      }
+
+      // Get friendly model name
+      function getModelName(modelChoice) {
+        switch (modelChoice) {
+          case "cnn_fe":
+            return "CNN-FE";
+          case "en_finetuned":
+            return "EfficientNet Finetuned";
+          case "en_tl":
+            return "EfficientNet TL";
+          default:
+            return modelChoice;
+        }
+      }
+
+      // Initialize the app when document is loaded
+      document.addEventListener("DOMContentLoaded", initApp);
     </script>
   </body>
 </html>
