@@ -1,5 +1,7 @@
 # **Image Classification using CNN-FE and Transfer Learning**
 
+Deployed at https://huggingface.co/spaces/dl-project-land-use/land-use-prediction?logs=container.
+
 ## **Project Overview**
 
 This project implements **two approaches** for image classification:
