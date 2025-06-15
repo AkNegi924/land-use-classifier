@@ -2,8 +2,7 @@
 
 Deployed at https://huggingface.co/spaces/dl-project-land-use/land-use-prediction?logs=container.
 
-![new_Forest](https://github.com/user-attachments/assets/4c873626-3dd8-46d7-9c3d-e2924dfad327)
-
+https://github.com/user-attachments/assets/26b6fd6b-b066-4d02-8420-3663ce52ff8a
 
 ## **Project Overview**
 
