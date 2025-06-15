@@ -1,6 +1,6 @@
 # **Image Classification using CNN-FE and Transfer Learning**
 
-Deployed at https://huggingface.co/spaces/dl-project-land-use/land-use-prediction?logs=container.
+This is a flask based version of our project. We changed the workflow to gradio for deploying it on HuggingFace. The gradio version is available at https://huggingface.co/spaces/dl-project-land-use/land-use-prediction?logs=container.
 
 https://github.com/user-attachments/assets/26b6fd6b-b066-4d02-8420-3663ce52ff8a
 
