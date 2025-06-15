@@ -2,6 +2,9 @@
 
 Deployed at https://huggingface.co/spaces/dl-project-land-use/land-use-prediction?logs=container.
 
+![new_Forest](https://github.com/user-attachments/assets/4c873626-3dd8-46d7-9c3d-e2924dfad327)
+
+
 ## **Project Overview**
 
 This project implements **two approaches** for image classification:
